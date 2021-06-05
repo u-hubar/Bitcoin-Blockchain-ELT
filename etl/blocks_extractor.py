@@ -21,7 +21,7 @@ class BlocksExtractor:
         for hash in self.hashes:
             block = Block(hash)
             all_input_section.extend(block.input_section)
-
+            
         return all_input_section
 
     def _load_hashes(self, year, month, day):
@@ -37,6 +37,9 @@ class BlocksExtractor:
         assert response.status_code == 200, "Failed blocks GET request!"
 
         blocks = response.json()
-        hashes = [b["hash"] for b in blocks["blocks"]]
+        hashes = [b["hash"] for b in blocks]
 
         return hashes
+
+block = BlocksExtractor(2020,4,15) 
+print(block.hashes[1])
