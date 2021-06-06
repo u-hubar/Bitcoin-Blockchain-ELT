@@ -54,16 +54,20 @@ class Block:
         for txn in block["tx"]:
             
             for out in txn["out"]:
-                print(out)
-
                 if not out["spent"]:
                     continue
+
+                if out['addr'] == '12dRugNcdxK39288NjcDV4GX7rMsKCGn6B':
+                    is_miner = True
+                    print("+")
+                else:
+                    is_miner = False
 
                 txn_hash = txn["hash"]
                 out_addr = out["addr"]
                 out_value = out["value"]
 
-                output_section.append((txn_hash, out_addr, out_value))
+                output_section.append((txn_hash, out_addr, out_value, is_miner))
 
         return output_section
 
