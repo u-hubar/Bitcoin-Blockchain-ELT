@@ -4,12 +4,12 @@ import sys
 import datetime
 
 from etl.block import Block
-import etl.utils.config as config
+from utils import config
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.INFO, format="%(name)s - %(message)s"
 )
-logger = logging.getLogger("Blockchain-ETL")
+logger = logging.getLogger("Blockchain-Warehouse")
 
 
 class BlocksExtractor:
@@ -37,6 +37,11 @@ class BlocksExtractor:
         assert response.status_code == 200, "Failed blocks GET request!"
 
         blocks = response.json()
-        hashes = [b["hash"] for b in blocks["blocks"]]
+        hashes = [b["hash"] for b in blocks]
 
         return hashes
+
+
+if __name__ == "__main__":
+    b = BlocksExtractor(2020, 6, 4)
+    print(b.load_inputs())

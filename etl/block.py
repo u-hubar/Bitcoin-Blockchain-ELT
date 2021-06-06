@@ -1,9 +1,9 @@
 import requests
 import logging
 
-import etl.utils.config as config
+from utils import config
 
-logger = logging.getLogger("Blockchain-ETL")
+logger = logging.getLogger("Blockchain-Warehouse")
 
 
 class Block:
@@ -24,12 +24,12 @@ class Block:
 
         input_section = []
         for txn in block["tx"]:
+            txn_hash = txn["hash"]
             for inp in txn["inputs"]:
 
                 if inp["prev_out"] is None:
                     continue
 
-                txn_hash = txn["hash"]
                 inp_addr = inp["prev_out"]["addr"]
                 inp_value = inp["prev_out"]["value"]
 
