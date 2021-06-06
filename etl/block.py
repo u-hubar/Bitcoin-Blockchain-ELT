@@ -3,6 +3,7 @@ import time
 
 import requests
 from etl.utils import config
+from tqdm import tqdm
 
 logger = logging.getLogger("Blockchain-ETL")
 
@@ -12,8 +13,9 @@ class Block:
         self.hash = hash
         self.input_section = self._parse_input_section()
         self.output_section = self._parse_output_section()
-        #self.transactions = self._parse_transaction()
+        self.transactions = self._parse_transaction()
         self.addresses = self._parse_addresses()
+        print(f"{len(self.input_section)},{len(self.output_section)},{len(self.transactions)},{len(self.addresses)}")
 
     def _parse_input_section(self):
         try:
@@ -60,10 +62,14 @@ class Block:
                 if not out["spent"]:
                     continue
 
-                if out['addr'] == '12dRugNcdxK39288NjcDV4GX7rMsKCGn6B':
-                    is_miner = True
-                else:
-                    is_miner = False
+                # if out['addr'] == '12dRugNcdxK39288NjcDV4GX7rMsKCGn6B':
+                #     is_miner = True
+                # else:
+                #     is_miner = False
+                
+                for inp in txn["inputs"]:
+                    if inp["prev_out"] is None:
+                        is_miner = True
 
                 txn_hash = txn["hash"]
                 out_addr = out["addr"]
@@ -108,51 +114,48 @@ class Block:
         addresses = []
         
         for addr in self.output_section:
-            time.sleep(2)
+  
             try:
-                response = requests.get(f"https://blockchain.info/multiaddr?active={addr[1]}")
+                response = requests.get(f"https://blockchain.info/balance?active={addr[1]}")
             except Exception as err:
                 logger.error(err)
                 continue
 
             assert response.status_code == 200, f"Failed single address GET request! (Response {response.status_code})"
+            
+            balance = response.json()
+            # print(f"{balance}==={addr[1]}")
+            bal = balance[f'{addr[1]}']['final_balance']
+            address = addr[1]
+            is_miner = addr[3]
+            
+            #####TODO
 
-            address_all = response.json()
-            ad = address_all['addresses']
-            address = ad[0]
-            add = address["address"]
-            balance = address["final_balance"]
-            print(balance)
-            is_miner = False
-            for tr in address_all['txs']:
-                for inp in tr["inputs"]:
-                    if inp["prev_out"] is None:
-                        is_miner = True
-            print(f"addr = {add},balance = {balance},miner = {is_miner}")
-            addresses.append((add,balance,is_miner))   
+            entity = 1 
+            # print(f"{address} ==== {bal}")
 
+            addresses.append((address, bal, is_miner, entity))
+        
         for addr in self.input_section:
-            time.sleep(2)
+  
             try:
-                response = requests.get(f"https://blockchain.info/multiaddr?active={addr[1]}")
+                response = requests.get(f"https://blockchain.info/balance?active={addr[1]}")
             except Exception as err:
                 logger.error(err)
                 continue
 
             assert response.status_code == 200, f"Failed single address GET request! (Response {response.status_code})"
+            
+            balance = response.json()
+            bal = balance[f'{addr[1]}']['final_balance']
+            address = addr[1]
+            is_miner = None
 
-            address_all = response.json()
-            ad = address_all['addresses']
-            address = ad[0]
-            add = address["address"]
-            balance = address["final_balance"]
-            is_miner = False
-            for tr in address_all['txs']:
-                for inp in tr["inputs"]:
-                    if inp["prev_out"] is None:
-                        is_miner = True
-            print(f"addr = {add},balance = {balance},miner = {is_miner}")
-            addresses.append((add,balance,is_miner))   
+            ###TODO
+            
+            entity = 1
+            
+            addresses.append((address, bal, is_miner, entity))
 
         # print(address)   
         return addresses
