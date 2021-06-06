@@ -17,7 +17,18 @@ class Database:
     def __init__(self):
         self.connection = self._connect()
 
-    def select_unexplored_entities(self):
+    @use_cursor
+    def select_last_entity(self, cursor):
+        select_query = """
+            SELECT max(entity)
+            FROM Blockchain.Addresses
+        """
+
+        cursor.execute(select_query)
+
+        return cursor.getchone()[0]
+
+    def select_inexplored_entities(self):
         select_query = """
             SELECT e.address, a.txhash
             FROM Blockchain.Entities e
@@ -26,12 +37,12 @@ class Database:
             WHERE a.entity IS NULL
         """
 
-        unexplored_entities = pd.read_sql_query(
+        inexplored_entities = pd.read_sql_query(
             select_query,
             self.connection
         )
 
-        return unexplored_entities
+        return inexplored_entities
 
     @use_cursor
     def update_addresses_entities(self, entities, cursor):
@@ -57,6 +68,8 @@ class Database:
 
         cursor.execute(select_query, (address,))
 
+        return cursor.fetchone()[0]
+
     @use_cursor
     def select_addreses_by_entity(self, entity, cursor):
         select_query = """
@@ -66,6 +79,9 @@ class Database:
         """
 
         cursor.execute(select_query, (entity,))
+
+        addresses = [x[0] for x in cursor.fetchall()]
+        return addresses
 
     @use_cursor
     def insert_transactions(self, transactions, cursor):
