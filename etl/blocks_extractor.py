@@ -41,5 +41,5 @@ class BlocksExtractor:
 
         return hashes
 
-block = BlocksExtractor(2020,4,15) 
+block = BlocksExtractor(2021,4,15) 
 print(block.hashes[1])

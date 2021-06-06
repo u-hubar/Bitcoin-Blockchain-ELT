@@ -1,8 +1,8 @@
-import requests
 import logging
-import json
-import etl.utils.config as config
 import time
+
+import requests
+from etl.utils import config
 
 logger = logging.getLogger("Blockchain-ETL")
 
@@ -11,9 +11,9 @@ class Block:
     def __init__(self, hash):
         self.hash = hash
         self.input_section = self._parse_input_section()
-        #self.output_section = self._parse_output_section()
+        self.output_section = self._parse_output_section()
         #self.transactions = self._parse_transaction()
-        self.addresses = self._parse_addreses()
+        self.addresses = self._parse_addresses()
 
     def _parse_input_section(self):
         try:
@@ -104,24 +104,60 @@ class Block:
 
         return transactions
     
-    def _parse_addreses(self):
+    def _parse_addresses(self):
         addresses = []
-        # response = requests.get(config.SINGLE_ADDRESS_URL.format("bc1q38l40klal9tkfsjkvdxtzr09zucyt04xyve65p"))
-        for addr in self.input_section:
-            print(addr[1])
+        
+        for addr in self.output_section:
+            time.sleep(2)
             try:
-                # time.sleep(0.2)
-                response = requests.get(config.SINGLE_ADDRESS_URL.format(addr[1]))
+                response = requests.get(f"https://blockchain.info/multiaddr?active={addr[1]}")
             except Exception as err:
+                logger.error(err)
                 continue
-            address = response.json()
-            print(address)
+
+            assert response.status_code == 200, f"Failed single address GET request! (Response {response.status_code})"
+
+            address_all = response.json()
+            ad = address_all['addresses']
+            address = ad[0]
+            add = address["address"]
             balance = address["final_balance"]
-            addresses.append(addr,balance)         
-        address = response.json()
-        # print(response)   
+            print(balance)
+            is_miner = False
+            for tr in address_all['txs']:
+                for inp in tr["inputs"]:
+                    if inp["prev_out"] is None:
+                        is_miner = True
+            print(f"addr = {add},balance = {balance},miner = {is_miner}")
+            addresses.append((add,balance,is_miner))   
+
+        for addr in self.input_section:
+            time.sleep(2)
+            try:
+                response = requests.get(f"https://blockchain.info/multiaddr?active={addr[1]}")
+            except Exception as err:
+                logger.error(err)
+                continue
+
+            assert response.status_code == 200, f"Failed single address GET request! (Response {response.status_code})"
+
+            address_all = response.json()
+            ad = address_all['addresses']
+            address = ad[0]
+            add = address["address"]
+            balance = address["final_balance"]
+            is_miner = False
+            for tr in address_all['txs']:
+                for inp in tr["inputs"]:
+                    if inp["prev_out"] is None:
+                        is_miner = True
+            print(f"addr = {add},balance = {balance},miner = {is_miner}")
+            addresses.append((add,balance,is_miner))   
+
+        # print(address)   
+        return addresses
 
             
 
 
-block = Block('000000000000000000116c752256d0bb80a9a4c3efa2fd520aa2cfcb388bbde2')
+block = Block('0000000000000000000aa1c83f77d1bb70a7a5508cb1cabcbea21a002addf07e')
