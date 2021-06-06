@@ -106,16 +106,20 @@ class Block:
     
     def _parse_addreses(self):
         addresses = []
-
+        # response = requests.get(config.SINGLE_ADDRESS_URL.format("bc1q38l40klal9tkfsjkvdxtzr09zucyt04xyve65p"))
         for addr in self.input_section:
+            print(addr[1])
             try:
-                response = requests.get(config.SINGLE_ADDRESS_URL.format(addr))
+                # time.sleep(0.2)
+                response = requests.get(config.SINGLE_ADDRESS_URL.format(addr[1]))
             except Exception as err:
                 continue
             address = response.json()
             print(address)
             balance = address["final_balance"]
-            addresses.append(addr,balance)            
+            addresses.append(addr,balance)         
+        address = response.json()
+        # print(response)   
 
             
 
