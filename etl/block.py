@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime
 
-import pandas as pd
 import requests
 from tqdm import tqdm
 from utils import config
@@ -176,32 +175,3 @@ class Block:
         addr_info = response.json()
 
         return addr_info
-
-    def _save_parsed_block(self):
-        transactions_df = pd.DataFrame(
-            self.transactions,
-            columns=["txhash", "timestamp", "blockhash", "ip"],
-        )
-        addreses_df = pd.DataFrame(
-            self.addresses, columns=["address", "balance", "isMiner"]
-        )
-        inputs_df = pd.DataFrame(
-            self.output_sections,
-            columns=["txhash", "address", "amount", "hasScript"],
-        )
-        outputs_df = pd.DataFrame(
-            self.input_sections,
-            columns=[
-                "txhash",
-                "address",
-                "amount",
-                "hasScript",
-                "unspent",
-                "isMining",
-            ],
-        )
-
-        transactions_df.to_csv("data/transactions.tsv", sep="\t", index=False)
-        addreses_df.to_csv("data/addresses.tsv", sep="\t", index=False)
-        inputs_df.to_csv("data/inputs.tsv", sep="\t", index=False)
-        outputs_df.to_csv("data/outputs.tsv", sep="\t", index=False)

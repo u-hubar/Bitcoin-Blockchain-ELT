@@ -129,6 +129,26 @@ class Database:
         psycopg2.extras.execute_batch(cursor, insert_query, outputs)
 
     @use_cursor
+    def insert_entities_from_inputs(self, cursor):
+        insert_query = """
+            INSERT INTO Blockchain.Entities (txhash, address)
+            SELECT address, txhash FROM Blockchain.inputSection
+            ON CONFLICT DO NOTHING
+        """
+
+        cursor.execute(insert_query)
+
+    @use_cursor
+    def insert_entities_from_outputs(self, cursor):
+        insert_query = """
+            INSERT INTO Blockchain.Entities (txhash, address)
+            SELECT address, txhash FROM Blockchain.outputSection
+            ON CONFLICT DO NOTHING
+        """
+
+        cursor.execute(insert_query)
+
+    @use_cursor
     def insert_entities(self, entities, cursor):
         insert_query = """
             INSERT INTO Blockchain.Entities (txhash, address)

@@ -45,6 +45,8 @@ class BlocksExtractor(Database):
             self.insert_transactions(block.transactions)
             self.insert_input_sections(block.input_sections)
             self.insert_output_sections(block.output_sections)
+            self.insert_entities_from_inputs()
+            self.insert_entities_from_outputs()
 
     def _load_hashes(self, year, month, day):
         epoch = (
