@@ -23,7 +23,11 @@ class BlocksExtractor(Database):
         self.hashes = self._load_hashes(year, month, day)
 
     def load_blocks(self):
-        blocks_pbar = tqdm(self.hashes, total=len(self.hashes))
+        blocks_pbar = tqdm(
+            self.hashes,
+            total=len(self.hashes),
+            leave=False
+        )
         for i, hash in enumerate(blocks_pbar):
             blocks_pbar.set_description(
                 desc=f"Block {i+1} / {len(self.hashes)}"
