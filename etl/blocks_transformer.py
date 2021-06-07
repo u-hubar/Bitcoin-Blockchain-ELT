@@ -1,4 +1,12 @@
+import logging
+import sys
+
 from database.db import Database
+
+logging.basicConfig(
+    stream=sys.stdout, level=logging.INFO, format="%(name)s - %(message)s"
+)
+logger = logging.getLogger("Blockchain-Warehouse")
 
 
 class BlocksTransformer(Database):

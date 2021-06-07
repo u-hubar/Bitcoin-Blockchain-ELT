@@ -1,9 +1,8 @@
 CREATE TABLE Blockchain.Addresses
 (
   address varchar(256) NOT NULL,
-  tag varchar(256) NOT NULL,
   balance bigint NOT NULL,
-  isMiner boolean NOT NULL,
+  isMiner boolean,
   entity bigint NOT NULL
 );
 
@@ -15,8 +14,7 @@ CREATE TABLE Blockchain.Transactions
   txhash varchar(256) NOT NULL,
   timestamp timestamp,
   blockhash varchar(256),
-  ip varchar(256),
-  hasScript boolean NOT NULL
+  ip varchar(256)
 );
 
 ALTER TABLE Blockchain.Transactions ADD CONSTRAINT PK_Transactions
@@ -26,7 +24,8 @@ CREATE TABLE Blockchain.inputSection
 (
   txhash varchar(256) NOT NULL,
   address varchar(256) NOT NULL,
-  amount bigint NOT NULL
+  amount bigint NOT NULL,
+  hasScript boolean NOT NULL,
 );
 
 CREATE TABLE Blockchain.outputSection
@@ -34,6 +33,7 @@ CREATE TABLE Blockchain.outputSection
   txhash varchar(256) NOT NULL,
   address varchar(256) NOT NULL,
   amount bigint NOT NULL,
+  hasScript boolean NOT NULL,
   unspent boolean NOT NULL,
   isMining boolean NOT NULL
 );

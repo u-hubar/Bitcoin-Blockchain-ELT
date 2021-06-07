@@ -10,7 +10,7 @@ from utils.decorators import use_cursor
 logging.basicConfig(
     stream=sys.stdout, level=logging.INFO, format="%(name)s - %(message)s"
 )
-logger = logging.getLogger("Blockchain-ETL-Database")
+logger = logging.getLogger("Blockchain-Warehouse")
 
 
 class Database:

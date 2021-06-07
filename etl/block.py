@@ -1,11 +1,11 @@
 import logging
 from datetime import datetime
-from utils.decorators import exponential_backoff
 
 import pandas as pd
 import requests
 from tqdm import tqdm
 from utils import config
+from utils.decorators import exponential_backoff
 
 logger = logging.getLogger("Blockchain-Warehouse")
 
@@ -20,14 +20,14 @@ class Block:
 
         self.transactions = []
         self.addresses = []
-        self.input_section = []
-        self.output_section = []
+        self.input_sections = []
+        self.output_sections = []
 
         # Iterating over block transactions
         tx_pbar = tqdm(block_info["tx"], total=len(block_info["tx"]))
-        for txn in tx_pbar:
+        for i, txn in enumerate(tx_pbar):
             tx_pbar.set_description(
-                desc=f"Transaction {len(self.transactions)} / {len(block_info['tx'])}"
+                desc=f"Transaction {i} / {len(block_info['tx'])}"
             )
 
             is_miner = False
@@ -62,7 +62,7 @@ class Block:
                     pass
 
                 # Appending single transaction input section information
-                self.input_section.append(
+                self.input_sections.append(
                     (txn_hash, inp_addr, inp_amount, inp_has_script)
                 )
 
@@ -84,9 +84,24 @@ class Block:
                 out_amount = out["value"]
                 out_unspent = not out["spent"]
 
+                out_has_script = False
+                try:
+                    if out["script"]:
+                        out_has_script = True
+
+                except KeyError:
+                    pass
+
                 # Appending single transaction output section information
-                self.output_section.append(
-                    (txn_hash, out_addr, out_amount, out_unspent, is_miner)
+                self.output_sections.append(
+                    (
+                        txn_hash,
+                        out_addr,
+                        out_amount,
+                        out_has_script,
+                        out_unspent,
+                        is_miner,
+                    )
                 )
 
                 # Appending single transaction output address information
@@ -97,7 +112,7 @@ class Block:
                         continue
 
                     addr_balance = balance_info[out_addr]["final_balance"]
-                    self.addresses.append((out_addr, addr_balance))
+                    self.addresses.append((out_addr, addr_balance, is_miner))
 
     @exponential_backoff(logger, retries=3, backoff=1, delay=0.1)
     def _get_block(self):
@@ -155,12 +170,19 @@ class Block:
             self.addresses, columns=["address", "balance", "isMiner"]
         )
         inputs_df = pd.DataFrame(
-            self.output_section,
+            self.output_sections,
             columns=["txhash", "address", "amount", "hasScript"],
         )
         outputs_df = pd.DataFrame(
-            self.input_section,
-            columns=["txhash", "address", "amount", "unspent", "isMining"],
+            self.input_sections,
+            columns=[
+                "txhash",
+                "address",
+                "amount",
+                "hasScript",
+                "unspent",
+                "isMining",
+            ],
         )
 
         transactions_df.to_csv("data/transactions.tsv", sep="\t", index=False)
