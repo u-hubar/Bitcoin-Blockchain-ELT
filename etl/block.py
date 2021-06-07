@@ -27,7 +27,7 @@ class Block:
         tx_pbar = tqdm(block_info["tx"], total=len(block_info["tx"]))
         for i, txn in enumerate(tx_pbar):
             tx_pbar.set_description(
-                desc=f"Transaction {i} / {len(block_info['tx'])}"
+                desc=f"Transaction {i+1} / {len(block_info['tx'])}"
             )
 
             is_miner = False

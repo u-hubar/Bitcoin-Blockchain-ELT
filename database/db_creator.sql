@@ -38,7 +38,7 @@ CREATE TABLE Blockchain.outputSection
   isMining boolean NOT NULL
 );
 
-CREATE TABLE Blockchain.Entity
+CREATE TABLE Blockchain.Entities
 (
   txhash varchar(256) NOT NULL,
   address varchar(256) NOT NULL
@@ -57,8 +57,8 @@ ALTER TABLE Blockchain.inputSection ADD CONSTRAINT fk_input_address
 ALTER TABLE Blockchain.outputSection ADD CONSTRAINT fk_output_address
   FOREIGN KEY (address) REFERENCES Blockchain.Addresses (address);
   
-ALTER TABLE Blockchain.Entity ADD CONSTRAINT fk_entity_transaction
+ALTER TABLE Blockchain.Entities ADD CONSTRAINT fk_entity_transaction
   FOREIGN KEY (txhash) REFERENCES Blockchain.Transactions (txhash); 
  
-ALTER TABLE Blockchain.Entity ADD CONSTRAINT fk_entity_address
+ALTER TABLE Blockchain.Entities ADD CONSTRAINT fk_entity_address
   FOREIGN KEY (address) REFERENCES Blockchain.Addresses (address);

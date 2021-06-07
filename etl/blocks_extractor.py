@@ -17,7 +17,7 @@ logger = logging.getLogger("Blockchain-Warehouse")
 
 class BlocksExtractor(Database):
     def __init__(self, year, month, day, blocks_limit=5):
-        super(Database, self).__init__()
+        super().__init__()
         self.blocks_limit = blocks_limit
         self.hashes = self._load_hashes(year, month, day)
 
@@ -25,7 +25,7 @@ class BlocksExtractor(Database):
         blocks_pbar = tqdm(self.hashes, total=len(self.hashes))
         for i, hash in enumerate(blocks_pbar):
             blocks_pbar.set_description(
-                desc=f"Block {i} / {len(self.hashes)}"
+                desc=f"Block {i+1} / {len(self.hashes)}"
             )
             block = Block(hash)
 

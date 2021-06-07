@@ -30,7 +30,7 @@ class Database:
 
     def select_inexplored_entities(self):
         select_query = """
-            SELECT e.address, a.txhash
+            SELECT e.address, e.txhash
             FROM Blockchain.Entities e
             INNER JOIN Blockchain.Addresses a
             ON e.address = a.address
@@ -142,7 +142,3 @@ class Database:
         connection.autocommit = True
 
         return connection
-
-
-if __name__ == "__main__":
-    df = Database()

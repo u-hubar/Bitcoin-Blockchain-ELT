@@ -11,7 +11,7 @@ logger = logging.getLogger("Blockchain-Warehouse")
 
 class BlocksTransformer(Database):
     def __init__(self):
-        super(Database, self).__init__()
+        super().__init__()
         self.i_entities = self.select_inexplored_entities()
         self.i_transactions = []
         self.i_addresses = []

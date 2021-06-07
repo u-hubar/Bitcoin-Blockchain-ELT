@@ -71,9 +71,9 @@ def main(args):
     blocks_extractor = BlocksExtractor(
         args.year, args.month, args.day, args.limit
     )
-    blocks_transformer = BlocksTransformer()
-
     blocks_extractor.load_blocks()
+
+    blocks_transformer = BlocksTransformer()
     blocks_transformer.clasterize()
 
 
