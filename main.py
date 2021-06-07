@@ -42,12 +42,20 @@ def parse_args():
         help="INT: Day of blocks to explore",
     )
     parser.add_argument(
+        "--offset",
+        "-O",
+        metavar="OFFSET",
+        type=int,
+        help="INT: Number of blocks to skip",
+        default=0,
+    )
+    parser.add_argument(
         "--limit",
         "-L",
         metavar="LIMIT",
-        required=True,
         type=int,
         help="INT: Maximum number of blocks to explore",
+        default=-1,
     )
     parser.add_argument(
         "--debug",
@@ -69,7 +77,7 @@ def setup_logging(debug):
 
 def main(args):
     blocks_extractor = BlocksExtractor(
-        args.year, args.month, args.day, args.limit
+        args.year, args.month, args.day, args.offset, args.limit
     )
     blocks_extractor.load_blocks()
 

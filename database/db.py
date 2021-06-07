@@ -26,7 +26,7 @@ class Database:
 
         cursor.execute(select_query)
 
-        return cursor.getchone()[0]
+        return cursor.fetchone()[0]
 
     def select_inexplored_entities(self):
         select_query = """
@@ -84,10 +84,19 @@ class Database:
         return addresses
 
     @use_cursor
+    def insert_block(self, block, cursor):
+        insert_query = """
+            INSERT INTO Blockchain.Blocks (blockHash, size, mainChain, height, txNum, timestamp, prevBlock)
+            VALUES(%s, %s, %s, %s, %s, %s, %s)
+        """
+
+        cursor.execute(insert_query, block)
+
+    @use_cursor
     def insert_transactions(self, transactions, cursor):
         insert_query = """
-            INSERT INTO Blockchain.Transactions (txhash, timestamp, blockhash, ip, hasScript, unspent)
-            VALUES(%s, %s, %s, %s, %s, %s)
+            INSERT INTO Blockchain.Transactions (txhash, timestamp, blockhash, ip)
+            VALUES(%s, %s, %s, %s)
         """
 
         psycopg2.extras.execute_batch(cursor, insert_query, transactions)
@@ -95,8 +104,8 @@ class Database:
     @use_cursor
     def insert_addresses(self, addreses, cursor):
         insert_query = """
-            INSERT INTO Blockchain.Addresses (address, tag, balance, isMiner, entity)
-            VALUES(%s, %s, %s, %s, %s)
+            INSERT INTO Blockchain.Addresses (address, balance, isMiner, entity)
+            VALUES(%s, %s, %s, %s)
         """
 
         psycopg2.extras.execute_batch(cursor, insert_query, addreses)
@@ -104,8 +113,8 @@ class Database:
     @use_cursor
     def insert_input_sections(self, inputs, cursor):
         insert_query = """
-            INSERT INTO Blockchain.inputSection (txhash, address, amount)
-            VALUES(%s, %s, %s)
+            INSERT INTO Blockchain.inputSection (txhash, address, amount, hasScript)
+            VALUES(%s, %s, %s, %s)
         """
 
         psycopg2.extras.execute_batch(cursor, insert_query, inputs)
@@ -113,8 +122,8 @@ class Database:
     @use_cursor
     def insert_output_sections(self, outputs, cursor):
         insert_query = """
-            INSERT INTO Blockchain.outputSection (txhash, address, amount, isMining)
-            VALUES(%s, %s, %s, %s)
+            INSERT INTO Blockchain.outputSection (txhash, address, amount, hasScript, unspent, isMining)
+            VALUES(%s, %s, %s, %s, %s, %s)
         """
 
         psycopg2.extras.execute_batch(cursor, insert_query, outputs)

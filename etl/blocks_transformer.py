@@ -23,7 +23,7 @@ class BlocksTransformer(Database):
         index = self.select_last_entity()
         index = 1 if index is None else index + 1
 
-        while self.i_entities:
+        while not self.i_entities.empty:
             self.e_addreses = []
             self.e_transactions = []
             self.i_addresses = []

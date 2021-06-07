@@ -16,8 +16,9 @@ logger = logging.getLogger("Blockchain-Warehouse")
 
 
 class BlocksExtractor(Database):
-    def __init__(self, year, month, day, blocks_limit=5):
+    def __init__(self, year, month, day, blocks_offset=0, blocks_limit=-1):
         super().__init__()
+        self.blocks_offset = blocks_offset
         self.blocks_limit = blocks_limit
         self.hashes = self._load_hashes(year, month, day)
 
@@ -29,6 +30,17 @@ class BlocksExtractor(Database):
             )
             block = Block(hash)
 
+            self.insert_block(
+                (
+                    block.hash,
+                    block.size,
+                    block.main_chain,
+                    block.height,
+                    block.tx_num,
+                    block.timestamp,
+                    block.prev_block,
+                )
+            )
             self.insert_addresses(block.addresses)
             self.insert_transactions(block.transactions)
             self.insert_input_sections(block.input_sections)
@@ -49,4 +61,7 @@ class BlocksExtractor(Database):
         blocks = response.json()
         hashes = [b["hash"] for b in blocks]
 
-        return hashes[:self.blocks_limit]
+        hashes = hashes[self.blocks_offset:]
+        hashes = hashes[:self.blocks_limit]
+
+        return hashes

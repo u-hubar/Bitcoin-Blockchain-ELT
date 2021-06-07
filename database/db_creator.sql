@@ -1,9 +1,23 @@
+CREATE TABLE Blockchain.Blocks
+(
+  blockHash VARCHAR(256) NOT NULL,
+  size BIGINT NOT NULL,
+  mainChain BOOLEAN NOT NULL,
+  height BIGINT NOT NULL,
+  txNum INT NOT NULL,
+  timestamp TIMESTAMP NOT NULL,
+  prevBlock VARCHAR(256)
+);
+
+ALTER TABLE Blockchain.Blocks ADD CONSTRAINT PK_Blocks
+  PRIMARY KEY (blockHash);
+
 CREATE TABLE Blockchain.Addresses
 (
-  address varchar(256) NOT NULL,
-  balance bigint NOT NULL,
-  isMiner boolean,
-  entity bigint NOT NULL
+  address VARCHAR(256) NOT NULL,
+  balance BIGINT NOT NULL,
+  isMiner BOOLEAN,
+  entity BIGINT
 );
 
 ALTER TABLE Blockchain.Addresses ADD CONSTRAINT PK_Addresses
@@ -11,10 +25,10 @@ ALTER TABLE Blockchain.Addresses ADD CONSTRAINT PK_Addresses
 
 CREATE TABLE Blockchain.Transactions
 (
-  txhash varchar(256) NOT NULL,
-  timestamp timestamp,
-  blockhash varchar(256),
-  ip varchar(256)
+  txhash VARCHAR(256) NOT NULL,
+  timestamp TIMESTAMP,
+  blockHash VARCHAR(256),
+  ip VARCHAR(256)
 );
 
 ALTER TABLE Blockchain.Transactions ADD CONSTRAINT PK_Transactions
@@ -22,28 +36,31 @@ ALTER TABLE Blockchain.Transactions ADD CONSTRAINT PK_Transactions
 
 CREATE TABLE Blockchain.inputSection
 (
-  txhash varchar(256) NOT NULL,
-  address varchar(256) NOT NULL,
-  amount bigint NOT NULL,
-  hasScript boolean NOT NULL
+  txhash VARCHAR(256) NOT NULL,
+  address VARCHAR(256) NOT NULL,
+  amount BIGINT NOT NULL,
+  hasScript BOOLEAN NOT NULL
 );
 
 CREATE TABLE Blockchain.outputSection
 (
-  txhash varchar(256) NOT NULL,
-  address varchar(256) NOT NULL,
-  amount bigint NOT NULL,
-  hasScript boolean NOT NULL,
-  unspent boolean NOT NULL,
-  isMining boolean NOT NULL
+  txhash VARCHAR(256) NOT NULL,
+  address VARCHAR(256) NOT NULL,
+  amount BIGINT NOT NULL,
+  hasScript BOOLEAN NOT NULL,
+  unspent BOOLEAN NOT NULL,
+  isMining BOOLEAN NOT NULL
 );
 
 CREATE TABLE Blockchain.Entities
 (
-  txhash varchar(256) NOT NULL,
-  address varchar(256) NOT NULL
+  txhash VARCHAR(256) NOT NULL,
+  address VARCHAR(256) NOT NULL
  
 );
+
+ALTER TABLE Blockchain.Transactions ADD CONSTRAINT fk_transaction_block
+  FOREIGN KEY (blockHash) REFERENCES Blockchain.Blocks (blockHash);
 
 ALTER TABLE Blockchain.inputSection ADD CONSTRAINT fk_input_transaction
   FOREIGN KEY (txhash) REFERENCES Blockchain.Transactions (txhash);

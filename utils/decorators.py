@@ -46,7 +46,7 @@ def exponential_backoff(logger, retries=3, backoff=1, delay=0.1):
                     return result
                 else:
                     logger.debug(
-                        f"({r}/{retries}) Failed to execute {f.__name__}."
+                        f"({r+1}/{retries}) Failed to execute {f.__name__}."
                     )
                     time.sleep((backoff ** r) + delay)
 

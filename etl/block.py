@@ -18,10 +18,18 @@ class Block:
     def _parse_block(self):
         block_info = self._get_block()
 
+        self.size = block_info["size"]
+        self.main_chain = block_info["main_chain"]
+        self.height = block_info["height"]
+        self.tx_num = block_info["n_tx"]
+        self.timestamp = datetime.utcfromtimestamp(int(block_info["time"]))
+        self.prev_block = block_info["prev_block"]
+
         self.transactions = []
         self.addresses = []
         self.input_sections = []
         self.output_sections = []
+        self.entities = []
 
         # Iterating over block transactions
         tx_pbar = tqdm(block_info["tx"], total=len(block_info["tx"]))
@@ -74,7 +82,7 @@ class Block:
                         continue
 
                     addr_balance = balance_info[inp_addr]["final_balance"]
-                    self.addresses.append((inp_addr, addr_balance))
+                    self.addresses.append((inp_addr, addr_balance, None, None))
 
             for out in txn_info["out"]:
                 if "addr" not in out.keys():
@@ -112,7 +120,9 @@ class Block:
                         continue
 
                     addr_balance = balance_info[out_addr]["final_balance"]
-                    self.addresses.append((out_addr, addr_balance, is_miner))
+                    self.addresses.append(
+                        (out_addr, addr_balance, is_miner, None)
+                    )
 
     @exponential_backoff(logger, retries=3, backoff=1, delay=0.1)
     def _get_block(self):
@@ -121,9 +131,11 @@ class Block:
 
         except Exception as err:
             logger.error(err)
-
-        if response.status_code != 200:
             return None
+
+        else:
+            if response.status_code != 200:
+                return None
 
         block_info = response.json()
 
@@ -138,9 +150,11 @@ class Block:
 
         except Exception as err:
             logger.error(err)
-
-        if response.status_code != 200:
             return None
+
+        else:
+            if response.status_code != 200:
+                return None
 
         txn_info = response.json()
 
@@ -153,9 +167,11 @@ class Block:
 
         except Exception as err:
             logger.error(err)
-
-        if response.status_code != 200:
             return None
+
+        else:
+            if response.status_code != 200:
+                return None
 
         addr_info = response.json()
 
