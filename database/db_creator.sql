@@ -25,7 +25,7 @@ CREATE TABLE Blockchain.inputSection
   txhash varchar(256) NOT NULL,
   address varchar(256) NOT NULL,
   amount bigint NOT NULL,
-  hasScript boolean NOT NULL,
+  hasScript boolean NOT NULL
 );
 
 CREATE TABLE Blockchain.outputSection
