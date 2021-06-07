@@ -132,7 +132,7 @@ class Database:
     def insert_entities_from_inputs(self, cursor):
         insert_query = """
             INSERT INTO Blockchain.Entities (txhash, address)
-            SELECT address, txhash FROM Blockchain.inputSection
+            SELECT txhash, address FROM Blockchain.inputSection
             ON CONFLICT DO NOTHING
         """
 
@@ -142,7 +142,7 @@ class Database:
     def insert_entities_from_outputs(self, cursor):
         insert_query = """
             INSERT INTO Blockchain.Entities (txhash, address)
-            SELECT address, txhash FROM Blockchain.outputSection
+            SELECT txhash, address FROM Blockchain.outputSection
             ON CONFLICT DO NOTHING
         """
 
