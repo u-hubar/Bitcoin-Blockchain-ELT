@@ -21,7 +21,7 @@ class BlocksExtractor:
         for hash in self.hashes:
             block = Block(hash)
             all_input_section.extend(block.input_section)
-
+            
         return all_input_section
 
     def _load_hashes(self, year, month, day):
@@ -40,8 +40,3 @@ class BlocksExtractor:
         hashes = [b["hash"] for b in blocks]
 
         return hashes
-
-
-if __name__ == "__main__":
-    b = BlocksExtractor(2020, 6, 4)
-    print(b.load_inputs())
