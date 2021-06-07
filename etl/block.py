@@ -1,9 +1,11 @@
 import logging
-import time
+from datetime import datetime
+from utils.decorators import exponential_backoff
 
+import pandas as pd
 import requests
-from etl.utils import config
 from tqdm import tqdm
+from utils import config
 
 logger = logging.getLogger("Blockchain-ETL")
 
@@ -11,156 +13,163 @@ logger = logging.getLogger("Blockchain-ETL")
 class Block:
     def __init__(self, hash):
         self.hash = hash
-        self.input_section = self._parse_input_section()
-        self.output_section = self._parse_output_section()
-        self.transactions = self._parse_transaction()
-        self.addresses = self._parse_addresses()
-        print(f"{len(self.input_section)},{len(self.output_section)},{len(self.transactions)},{len(self.addresses)}")
+        self._parse_block()
+        self._save_parsed_block()
 
-    def _parse_input_section(self):
-        try:
-            response = requests.get(config.SINGLE_BLOCK_URL.format(self.hash))
+    def _parse_block(self):
+        block_info = self._get_block()
 
-        except Exception as err:
-            logger.error(err)
+        self.transactions = []
+        self.addresses = []
+        self.input_section = []
+        self.output_section = []
 
-        assert response.status_code == 200, "Failed single block GET request!"
+        # Iterating over block transactions
+        tx_pbar = tqdm(block_info["tx"], total=len(block_info["tx"]))
+        for txn in tx_pbar:
+            tx_pbar.set_description(
+                desc=f"Transaction {len(self.transactions)} / {len(block_info['tx'])}"
+            )
 
-        block = response.json()
+            is_miner = False
+            txn_hash = txn["hash"]
 
-        input_section = []
+            txn_info = self._get_transaction(txn_hash)
 
-        for txn in block["tx"]:
-            for inp in txn["inputs"]:
+            # Continue if transaction request failed
+            if txn_info is None:
+                continue
+
+            txn_time = datetime.utcfromtimestamp(int(txn_info["time"]))
+            txn_ip = txn_info["relayed_by"]
+
+            # Appending single transaction information
+            self.transactions.append((txn_hash, txn_time, self.hash, txn_ip))
+
+            for inp in txn_info["inputs"]:
                 if inp["prev_out"] is None:
+                    is_miner = True
                     continue
 
-                txn_hash = txn["hash"]
                 inp_addr = inp["prev_out"]["addr"]
-                inp_value = inp["prev_out"]["value"]
+                inp_amount = inp["prev_out"]["value"]
 
-                input_section.append((txn_hash, inp_addr, inp_value))
-
-        return input_section
-    
-    def _parse_output_section(self):
-        try:
-            response = requests.get(config.SINGLE_BLOCK_URL.format(self.hash))
-
-        except Exception as err:
-            logger.error(err)
-
-        assert response.status_code == 200, "Failed single block GET request!"
-
-        block = response.json()
-
-        output_section = []
-
-        for txn in block["tx"]:
-            
-            for out in txn["out"]:
-                if not out["spent"]:
-                    continue
-
-                # if out['addr'] == '12dRugNcdxK39288NjcDV4GX7rMsKCGn6B':
-                #     is_miner = True
-                # else:
-                #     is_miner = False
-                
-                for inp in txn["inputs"]:
-                    if inp["prev_out"] is None:
-                        is_miner = True
-
-                txn_hash = txn["hash"]
-                out_addr = out["addr"]
-                out_value = out["value"]
-
-
-                output_section.append((txn_hash, out_addr, out_value, is_miner))
-
-        return output_section
-    
-    def _parse_transaction(self):
-        try:
-            response = requests.get(config.SINGLE_BLOCK_URL.format(self.hash))
-
-        except Exception as err:
-            logger.error(err)
-
-        assert response.status_code == 200, "Failed single block GET request!"
-
-        block = response.json()
-
-        block_hash = block['hash']
-        time = block['time']
-        
-        transactions =[]
-
-        for txn in block["tx"]:
-            trans_ip = txn['relayed_by']
-            trans_hash = txn['hash']
-            for inp in txn['inputs']:
+                inp_has_script = False
                 try:
-                    has_script = True if inp["script"] else False
+                    if inp["script"]:
+                        inp_has_script = True
+
                 except KeyError:
                     pass
-            unspent = txn['double_spend']
-        
-            transactions.append((trans_hash,time,block_hash,trans_ip,has_script,unspent))
 
-        return transactions
-    
-    def _parse_addresses(self):
-        addresses = []
-        
-        for addr in self.output_section:
-  
-            try:
-                response = requests.get(f"https://blockchain.info/balance?active={addr[1]}")
-            except Exception as err:
-                logger.error(err)
-                continue
+                # Appending single transaction input section information
+                self.input_section.append(
+                    (txn_hash, inp_addr, inp_amount, inp_has_script)
+                )
 
-            assert response.status_code == 200, f"Failed single address GET request! (Response {response.status_code})"
-            
-            balance = response.json()
-            # print(f"{balance}==={addr[1]}")
-            bal = balance[f'{addr[1]}']['final_balance']
-            address = addr[1]
-            is_miner = addr[3]
-            
-            #####TODO
+                # Appending single transacction input address information
+                if not any([addr[0] == inp_addr for addr in self.addresses]):
+                    balance_info = self._get_balance(inp_addr)
+                    # Continue if balance request failed
+                    if balance_info is None:
+                        continue
 
-            entity = 1 
-            # print(f"{address} ==== {bal}")
+                    addr_balance = balance_info[inp_addr]["final_balance"]
+                    self.addresses.append((inp_addr, addr_balance))
 
-            addresses.append((address, bal, is_miner, entity))
-        
-        for addr in self.input_section:
-  
-            try:
-                response = requests.get(f"https://blockchain.info/balance?active={addr[1]}")
-            except Exception as err:
-                logger.error(err)
-                continue
+            for out in txn_info["out"]:
+                if "addr" not in out.keys():
+                    continue
 
-            assert response.status_code == 200, f"Failed single address GET request! (Response {response.status_code})"
-            
-            balance = response.json()
-            bal = balance[f'{addr[1]}']['final_balance']
-            address = addr[1]
-            is_miner = None
+                out_addr = out["addr"]
+                out_amount = out["value"]
+                out_unspent = not out["spent"]
 
-            ###TODO
-            
-            entity = 1
-            
-            addresses.append((address, bal, is_miner, entity))
+                # Appending single transaction output section information
+                self.output_section.append(
+                    (txn_hash, out_addr, out_amount, out_unspent, is_miner)
+                )
 
-        # print(address)   
-        return addresses
+                # Appending single transaction output address information
+                if not any([addr[0] == out_addr for addr in self.addresses]):
+                    balance_info = self._get_balance(out_addr)
+                    # Continue if balance request failed
+                    if balance_info is None:
+                        continue
 
-            
+                    addr_balance = balance_info[out_addr]["final_balance"]
+                    self.addresses.append((out_addr, addr_balance))
+
+    @exponential_backoff(logger, retries=3, backoff=1, delay=0.1)
+    def _get_block(self):
+        try:
+            response = requests.get(config.SINGLE_BLOCK_URL.format(self.hash))
+
+        except Exception as err:
+            logger.error(err)
+
+        if response.status_code != 200:
+            return None
+
+        block_info = response.json()
+
+        return block_info
+
+    @exponential_backoff(logger, retries=3, backoff=1, delay=0.1)
+    def _get_transaction(self, txn_hash):
+        try:
+            response = requests.get(
+                config.SINGLE_TRANSACTION_URL.format(txn_hash)
+            )
+
+        except Exception as err:
+            logger.error(err)
+
+        if response.status_code != 200:
+            return None
+
+        txn_info = response.json()
+
+        return txn_info
+
+    @exponential_backoff(logger, retries=3, backoff=1, delay=0.1)
+    def _get_balance(self, addr):
+        try:
+            response = requests.get(config.SINGLE_BALANCE_URL.format(addr))
+
+        except Exception as err:
+            logger.error(err)
+
+        if response.status_code != 200:
+            return None
+
+        addr_info = response.json()
+
+        return addr_info
+
+    def _save_parsed_block(self):
+        transactions_df = pd.DataFrame(
+            self.transactions,
+            columns=["txhash", "timestamp", "blockhash", "ip"],
+        )
+        addreses_df = pd.DataFrame(
+            self.addresses, columns=["address", "balance", "isMiner"]
+        )
+        inputs_df = pd.DataFrame(
+            self.output_section,
+            columns=["txhash", "address", "amount", "hasScript"],
+        )
+        outputs_df = pd.DataFrame(
+            self.input_section,
+            columns=["txhash", "address", "amount", "unspent", "isMining"],
+        )
+
+        transactions_df.to_csv("data/transactions.tsv", sep="\t", index=False)
+        addreses_df.to_csv("data/addresses.tsv", sep="\t", index=False)
+        inputs_df.to_csv("data/inputs.tsv", sep="\t", index=False)
+        outputs_df.to_csv("data/outputs.tsv", sep="\t", index=False)
 
 
-block = Block('0000000000000000000aa1c83f77d1bb70a7a5508cb1cabcbea21a002addf07e')
+block = Block(
+    "0000000000000000000aa1c83f77d1bb70a7a5508cb1cabcbea21a002addf07e"
+)
