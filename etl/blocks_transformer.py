@@ -28,7 +28,9 @@ class BlocksTransformer(Database):
             logger.info(f"Clusterizing entity = {index}")
             self.e_addreses = []
             self.e_transactions = []
-            self.i_addresses = [self.i_entities.loc[0, "address"]]
+            self.i_addresses = [
+                self.i_entities.loc[self.i_entities.index[0], "address"]
+            ]
             self.i_transactions = []
 
             logger.info("Searching for inexplored addresses/transactions...")
@@ -74,7 +76,7 @@ class BlocksTransformer(Database):
 
     def remove_explored_entities(self):
         self.i_entities = self.i_entities[
-            ~self.i_entities.isin(self.e_transactions)
+            ~self.i_entities["txhash"].isin(self.e_transactions)
         ]
 
     def update_entities(self):

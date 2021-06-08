@@ -81,8 +81,8 @@ def main(args):
     )
     blocks_extractor.load_blocks()
 
-    # blocks_transformer = BlocksTransformer()
-    # blocks_transformer.clusterize()
+    blocks_transformer = BlocksTransformer()
+    blocks_transformer.clusterize()
 
 
 if __name__ == "__main__":
