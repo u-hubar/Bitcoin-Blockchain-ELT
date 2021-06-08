@@ -10,7 +10,7 @@ from utils.decorators import use_cursor
 logging.basicConfig(
     stream=sys.stdout, level=logging.INFO, format="%(name)s - %(message)s"
 )
-logger = logging.getLogger("Blockchain-ETL-Database")
+logger = logging.getLogger("Blockchain-Warehouse")
 
 
 class Database:
@@ -19,6 +19,8 @@ class Database:
 
     @use_cursor
     def select_last_entity(self, cursor):
+        logger.info("Selecting last entity...")
+
         select_query = """
             SELECT max(entity)
             FROM Blockchain.Addresses
@@ -26,11 +28,13 @@ class Database:
 
         cursor.execute(select_query)
 
-        return cursor.getchone()[0]
+        return cursor.fetchone()[0]
 
     def select_inexplored_entities(self):
+        logger.info("Selecting inexplored entities...")
+
         select_query = """
-            SELECT e.address, a.txhash
+            SELECT e.address, e.txhash
             FROM Blockchain.Entities e
             INNER JOIN Blockchain.Addresses a
             ON e.address = a.address
@@ -46,6 +50,8 @@ class Database:
 
     @use_cursor
     def update_addresses_entities(self, entities, cursor):
+        logger.info("Updating entities in Addresses table...")
+
         update_query = """
             UPDATE Blockchain.Addresses
             SET entity = %s
@@ -60,6 +66,8 @@ class Database:
 
     @use_cursor
     def select_entity_by_address(self, address, cursor):
+        logger.info("Selecting entity by address...")
+
         select_query = """
             SELECT entity
             FROM Blockchain.Addresses
@@ -72,6 +80,8 @@ class Database:
 
     @use_cursor
     def select_addreses_by_entity(self, entity, cursor):
+        logger.info("Selecting addresses by entity...")
+
         select_query = """
             SELECT address
             FROM Blockchain.Addresses
@@ -84,46 +94,97 @@ class Database:
         return addresses
 
     @use_cursor
-    def insert_transactions(self, transactions, cursor):
+    def insert_block(self, block, cursor):
+        logger.info("Inserting block info...")
+
         insert_query = """
-            INSERT INTO Blockchain.Transactions (txhash, timestamp, blockhash, ip, hasScript, unspent)
-            VALUES(%s, %s, %s, %s, %s, %s)
+            INSERT INTO Blockchain.Blocks (blockHash, size, mainChain, height, txNum, timestamp, prevBlock)
+            VALUES(%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT DO NOTHING
+        """
+
+        cursor.execute(insert_query, block)
+
+    @use_cursor
+    def insert_transactions(self, transactions, cursor):
+        logger.info("Inserting transactions info...")
+
+        insert_query = """
+            INSERT INTO Blockchain.Transactions (txhash, timestamp, blockhash, ip)
+            VALUES(%s, %s, %s, %s)
+            ON CONFLICT DO NOTHING
         """
 
         psycopg2.extras.execute_batch(cursor, insert_query, transactions)
 
     @use_cursor
     def insert_addresses(self, addreses, cursor):
+        logger.info("Inserting addresses info...")
+
         insert_query = """
-            INSERT INTO Blockchain.Addresses (address, tag, balance, isMiner, entity)
-            VALUES(%s, %s, %s, %s, %s)
+            INSERT INTO Blockchain.Addresses (address, balance, isMiner, entity)
+            VALUES(%s, %s, %s, %s)
+            ON CONFLICT DO NOTHING
         """
 
         psycopg2.extras.execute_batch(cursor, insert_query, addreses)
 
     @use_cursor
     def insert_input_sections(self, inputs, cursor):
+        logger.info("Inserting input sections info...")
+
         insert_query = """
-            INSERT INTO Blockchain.inputSection (txhash, address, amount)
-            VALUES(%s, %s, %s)
+            INSERT INTO Blockchain.inputSection (txhash, address, amount, hasScript)
+            VALUES(%s, %s, %s, %s)
+            ON CONFLICT DO NOTHING
         """
 
         psycopg2.extras.execute_batch(cursor, insert_query, inputs)
 
     @use_cursor
     def insert_output_sections(self, outputs, cursor):
+        logger.info("Inserting output sections info...")
+
         insert_query = """
-            INSERT INTO Blockchain.outputSection (txhash, address, amount, isMining)
-            VALUES(%s, %s, %s, %s)
+            INSERT INTO Blockchain.outputSection (txhash, address, amount, hasScript, unspent, isMining)
+            VALUES(%s, %s, %s, %s, %s, %s)
+            ON CONFLICT DO NOTHING
         """
 
         psycopg2.extras.execute_batch(cursor, insert_query, outputs)
 
     @use_cursor
+    def insert_entities_from_inputs(self, cursor):
+        logger.info("Inserting entities from inputs...")
+
+        insert_query = """
+            INSERT INTO Blockchain.Entities (txhash, address)
+            SELECT txhash, address FROM Blockchain.inputSection
+            ON CONFLICT DO NOTHING
+        """
+
+        cursor.execute(insert_query)
+
+    @use_cursor
+    def insert_entities_from_outputs(self, cursor):
+        logger.info("Inserting entities from outputs...")
+
+        insert_query = """
+            INSERT INTO Blockchain.Entities (txhash, address)
+            SELECT txhash, address FROM Blockchain.outputSection
+            ON CONFLICT DO NOTHING
+        """
+
+        cursor.execute(insert_query)
+
+    @use_cursor
     def insert_entities(self, entities, cursor):
+        logger.info("Inserting new entities...")
+
         insert_query = """
             INSERT INTO Blockchain.Entities (txhash, address)
             VALUES(%s, %s)
+            ON CONFLICT DO NOTHING
         """
 
         psycopg2.extras.execute_batch(cursor, insert_query, entities)
@@ -142,7 +203,3 @@ class Database:
         connection.autocommit = True
 
         return connection
-
-
-if __name__ == "__main__":
-    df = Database()
