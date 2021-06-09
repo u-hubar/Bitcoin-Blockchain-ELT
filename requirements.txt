@@ -3,3 +3,4 @@ psycopg2-binary
 numpy
 pandas
 tqdm
+cubes[all]

@@ -7,7 +7,7 @@ from database.db import Database
 from tqdm import tqdm
 from utils import config
 
-from etl.block import Block
+from elt.block import Block
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.INFO, format="%(name)s - %(message)s"

@@ -1,0 +1,45 @@
+{
+    "cubes": [
+        {
+            "name": "transactions",
+            "dimensions": ["transactions", "blocks", "inputsection", "outputsection"],
+            "measures": ["amount"],
+            "joins": [
+                {"master":"blockhash", "detail":"transactions.blockhash"},
+                {"master":"transactions.blockhash", "detail":"blocks.blockhash"},
+                {"master":"txhash", "detail":"inputsection.txhash"},
+                {"master":"txhash", "detail":"outputsection.txhash"}
+            ]
+        }
+    ],
+    "dimensions": [
+        {
+            "name": "transactions",
+            "levels": [
+                {
+                    "name": "info",
+                    "attributes": ["blockhash", "ip"]
+                },
+                {
+                    "name": "date",
+                    "attributes": ["timestamp"]
+                }
+            ]
+        },
+        {
+            "name": "blocks",
+            "levels": [
+                {
+                    "name": "info",
+                    "attributes": ["size", "mainchain", "height", "txnum", "prevblock"]
+                },
+                {
+                    "name": "date",
+                    "attributes": ["timestamp"]
+                }
+            ]
+        },
+        { "name": "inputsection", "attributes": ["address", "hasScript"] },
+        { "name": "outputsection", "attributes": ["address", "hasScript", "unspent", "isMining"] }
+    ]
+}
