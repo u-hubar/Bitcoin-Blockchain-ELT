@@ -2,8 +2,8 @@ import argparse
 import logging
 import sys
 
-from etl.blocks_extractor import BlocksExtractor
-from etl.blocks_transformer import BlocksTransformer
+from elt.blocks_extractor import BlocksExtractor
+from elt.blocks_transformer import BlocksTransformer
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.INFO, format="%(name)s - %(message)s"

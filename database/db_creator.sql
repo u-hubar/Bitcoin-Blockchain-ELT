@@ -12,17 +12,6 @@ CREATE TABLE Blockchain.Blocks
 ALTER TABLE Blockchain.Blocks ADD CONSTRAINT PK_Blocks
   PRIMARY KEY (blockHash);
 
-CREATE TABLE Blockchain.Addresses
-(
-  address VARCHAR(256) NOT NULL,
-  balance BIGINT NOT NULL,
-  isMiner BOOLEAN,
-  entity BIGINT
-);
-
-ALTER TABLE Blockchain.Addresses ADD CONSTRAINT PK_Addresses
-  PRIMARY KEY (address);
-
 CREATE TABLE Blockchain.Transactions
 (
   txhash VARCHAR(256) NOT NULL,
@@ -33,6 +22,29 @@ CREATE TABLE Blockchain.Transactions
 
 ALTER TABLE Blockchain.Transactions ADD CONSTRAINT PK_Transactions
   PRIMARY KEY (txhash);
+
+CREATE TABLE Blockchain.Dates
+(
+  txhash VARCHAR(256) NOT NULL,
+  date DATE NOT NULL,
+  year INT NOT NULL,
+  month INT NOT NULL,
+  day INT NOT NULL,
+  hour INT NOT NULL,
+  minute INT NOT NULL,
+  second INT NOT NULL
+);
+
+CREATE TABLE Blockchain.Addresses
+(
+  address VARCHAR(256) NOT NULL,
+  balance BIGINT NOT NULL,
+  isMiner BOOLEAN,
+  entity BIGINT
+);
+
+ALTER TABLE Blockchain.Addresses ADD CONSTRAINT PK_Addresses
+  PRIMARY KEY (address);
 
 CREATE TABLE Blockchain.inputSection
 (
@@ -61,6 +73,9 @@ CREATE TABLE Blockchain.Entities
 
 ALTER TABLE Blockchain.Transactions ADD CONSTRAINT fk_transaction_block
   FOREIGN KEY (blockHash) REFERENCES Blockchain.Blocks (blockHash);
+
+ALTER TABLE Blockchain.Dates ADD CONSTRAINT fk_date_transaction
+  FOREIGN KEY (txhash) REFERENCES Blockchain.Transactions (txhash);
 
 ALTER TABLE Blockchain.inputSection ADD CONSTRAINT fk_input_transaction
   FOREIGN KEY (txhash) REFERENCES Blockchain.Transactions (txhash);

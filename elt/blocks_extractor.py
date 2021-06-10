@@ -7,7 +7,7 @@ from database.db import Database
 from tqdm import tqdm
 from utils import config
 
-from etl.block import Block
+from elt.block import Block
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.INFO, format="%(name)s - %(message)s"
@@ -51,6 +51,7 @@ class BlocksExtractor(Database):
             self.insert_output_sections(block.output_sections)
             self.insert_entities_from_inputs()
             self.insert_entities_from_outputs()
+            self.insert_transactions_dates()
 
     def _load_hashes(self, year, month, day):
         epoch = (
