@@ -1,45 +1,93 @@
 {
     "cubes": [
         {
-            "name": "transactions",
-            "dimensions": ["transactions", "blocks", "inputsection", "outputsection"],
+            "name": "inputsection",
+            "dimensions": ["transactions", "addresses", "dates"],
             "measures": ["amount"],
+            "aggregates": [
+                {
+                    "name": "amount_sum",
+                    "label": "Input Amount Sum",
+                    "measure": "amount",
+                    "function": "sum"
+                },
+                {
+                    "name": "amount_min",
+                    "label": "Input Amount Min",
+                    "measure": "amount",
+                    "function": "min"
+                },
+                {
+                    "name": "amount_max",
+                    "label": "Input Amount Max",
+                    "measure": "amount",
+                    "function": "max"
+                },
+                {
+                    "name": "amount_avg",
+                    "label": "Input Amount Average",
+                    "measure": "amount",
+                    "function": "avg"
+                },
+                {
+                    "name": "facts_count",
+                    "label": "Inputs Count",
+                    "function": "count"
+                }
+            ],
             "joins": [
-                {"master":"blockhash", "detail":"transactions.blockhash"},
+                {"master":"txhash", "detail":"transactions.txhash"},
                 {"master":"transactions.blockhash", "detail":"blocks.blockhash"},
-                {"master":"txhash", "detail":"inputsection.txhash"},
-                {"master":"txhash", "detail":"outputsection.txhash"}
-            ]
+                {"master":"address", "detail":"addresses.address"},
+                {"master":"txhash", "detail":"dates.txhash"}
+            ],
+            "mappings": {
+                "transactions.blockheight": "blocks.height",
+                "transactions.mainchain": "blocks.mainchain"
+            }
         }
     ],
     "dimensions": [
         {
             "name": "transactions",
             "levels": [
-                {
-                    "name": "info",
-                    "attributes": ["blockhash", "ip"]
-                },
-                {
-                    "name": "date",
-                    "attributes": ["timestamp"]
-                }
+                { "name": "tx_ip", "label": "IP", "attributes": ["ip"] },
+                { "name": "block_h", "label": "Height", "attributes": ["blockheight"] },
+                { "name": "block_chain", "label": "Main Chain?", "attributes": ["mainchain"] }
+            ],
+            "hierarchies": [
+                { "name": "tx", "label": "Transaction", "levels": ["tx_ip"] },
+                { "name": "blocks", "label": "Blocks", "levels": ["block_chain", "block_h"] }
             ]
         },
         {
-            "name": "blocks",
+            "name": "addresses",
             "levels": [
-                {
-                    "name": "info",
-                    "attributes": ["size", "mainchain", "height", "txnum", "prevblock"]
-                },
-                {
-                    "name": "date",
-                    "attributes": ["timestamp"]
-                }
-            ]
+                { "name": "entity", "label": "Entity", "attributes": ["entity"] },
+                { "name": "balance", "label": "Total Balance", "attributes": ["balance"] },
+                { "name": "miner", "label": "Is Miner?", "attributes": ["isminer"] }
+            ],
+            "hierarchies": [
+                { "name": "addr", "label": "Address", "levels": ["entity", "miner"] },
+                { "name": "addr_balance", "label": "Address Balance", "levels": ["balance"] }
+            ],
+            "default_hierarchy_name": "addr"
         },
-        { "name": "inputsection", "attributes": ["address", "hasScript"] },
-        { "name": "outputsection", "attributes": ["address", "hasScript", "unspent", "isMining"] }
+        {
+            "name": "dates",
+            "levels": [
+                { "name": "date", "label": "Date", "attributes": ["date"] },
+                { "name": "year", "label": "Years Precision", "attributes": ["year"] },
+                { "name": "month", "label": "Months Precision", "attributes": ["month"] },
+                { "name": "day", "label": "Days Precision", "attributes": ["day"] },
+                { "name": "hour", "label": "Hours Precision", "attributes": ["hour"] },
+                { "name": "minute", "label": "Minutes Precision", "attributes": ["minute"] },
+                { "name": "second", "label": "Seconds Precision", "attributes": ["second"] }
+            ],
+            "hierarchies": [
+                { "name": "ymdhms", "levels": ["year", "month", "day", "hour", "minute", "second"] }
+            ],
+            "default_hierarchy_name": "ymdhms"
+        }
     ]
 }

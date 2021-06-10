@@ -118,6 +118,27 @@ class Database:
         psycopg2.extras.execute_batch(cursor, insert_query, transactions)
 
     @use_cursor
+    def insert_transactions_dates(self, cursor):
+        logger.info("Inserting transactions dates...")
+
+        insert_query = """
+            INSERT INTO Blockchain.Dates (txhash, date, year, month, day, hour, minute, second)
+            SELECT
+                txhash,
+                DATE(timestamp) AS date,
+                EXTRACT(YEAR FROM timestamp) AS year,
+                EXTRACT(MONTH FROM timestamp) AS month,
+                EXTRACT(DAY FROM timestamp) AS day,
+                EXTRACT(HOUR FROM timestamp) AS hour,
+                EXTRACT(MINUTE FROM timestamp) AS minute,
+                EXTRACT(SECOND FROM timestamp) AS second
+            FROM Blockchain.Transactions
+            ON CONFLICT DO NOTHING
+        """
+
+        cursor.execute(insert_query)
+
+    @use_cursor
     def insert_addresses(self, addreses, cursor):
         logger.info("Inserting addresses info...")
 

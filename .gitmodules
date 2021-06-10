@@ -1,0 +1,3 @@
+[submodule "cubesviewer"]
+	path = cubesviewer
+	url = git@github.com:jjmontesl/cubesviewer.git
