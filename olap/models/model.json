@@ -45,9 +45,61 @@
                 "transactions.blockheight": "blocks.height",
                 "transactions.mainchain": "blocks.mainchain"
             }
+        },
+        {
+            "name": "outputsection",
+            "dimensions": ["outputsection", "transactions", "addresses", "dates"],
+            "measures": ["amount"],
+            "aggregates": [
+                {
+                    "name": "amount_sum",
+                    "label": "Output Amount Sum",
+                    "measure": "amount",
+                    "function": "sum"
+                },
+                {
+                    "name": "amount_min",
+                    "label": "Output Amount Min",
+                    "measure": "amount",
+                    "function": "min"
+                },
+                {
+                    "name": "amount_max",
+                    "label": "Output Amount Max",
+                    "measure": "amount",
+                    "function": "max"
+                },
+                {
+                    "name": "amount_avg",
+                    "label": "Output Amount Average",
+                    "measure": "amount",
+                    "function": "avg"
+                },
+                {
+                    "name": "facts_count",
+                    "label": "Output Count",
+                    "function": "count"
+                }
+            ],
+            "joins": [
+                {"master":"txhash", "detail":"transactions.txhash"},
+                {"master":"transactions.blockhash", "detail":"blocks.blockhash"},
+                {"master":"address", "detail":"addresses.address"},
+                {"master":"txhash", "detail":"dates.txhash"}
+            ],
+            "mappings": {
+                "transactions.blockheight": "blocks.height",
+                "transactions.mainchain": "blocks.mainchain"
+            }
         }
     ],
     "dimensions": [
+        {
+            "name": "outputsection",
+            "levels": [
+                { "name": "out", "label": "Unspent?", "attributes": ["unspent"] }
+            ]
+        },
         {
             "name": "transactions",
             "levels": [
